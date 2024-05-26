@@ -10,6 +10,7 @@ const Profile = () => {
     address: "",
   });
   const [error, setError] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -72,6 +73,7 @@ const Profile = () => {
 
       if (response.ok) {
         alert("Profile updated successfully");
+        setIsEditing(false);
         // Fetch the updated profile
         const updatedProfileResponse = await fetch(
           "http://localhost:8080/api/auth/profile",
@@ -99,6 +101,34 @@ const Profile = () => {
     }
   };
 
+  const handleLogout = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:8080/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        localStorage.removeItem("token");
+        navigate("/login");
+      } else {
+        setError("Failed to logout. Please try again later.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setError("An error occurred. Please try again later.");
+    }
+  };
+
   return (
     <div className="profile-container">
       <div className="profile-card">
@@ -116,6 +146,7 @@ const Profile = () => {
               placeholder="Enter your first name"
               value={profile.firstName}
               onChange={handleInputChange}
+              disabled={!isEditing}
             />
           </div>
           <div className="mb-3">
@@ -130,6 +161,7 @@ const Profile = () => {
               placeholder="Enter your last name"
               value={profile.lastName}
               onChange={handleInputChange}
+              disabled={!isEditing}
             />
           </div>
           <div className="mb-3">
@@ -144,6 +176,7 @@ const Profile = () => {
               placeholder="Enter your phone number"
               value={profile.phoneNumber}
               onChange={handleInputChange}
+              disabled={!isEditing}
             />
           </div>
           <div className="mb-3">
@@ -158,11 +191,30 @@ const Profile = () => {
               placeholder="Enter your address"
               value={profile.address}
               onChange={handleInputChange}
+              disabled={!isEditing}
             />
           </div>
           {error && <div className="alert alert-danger">{error}</div>}
-          <button type="submit" className="btn btn-primary">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => setIsEditing(true)}
+          >
+            Edit
+          </button>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={!isEditing}
+          >
             Update Profile
+          </button>
+          <button
+            type="button"
+            className="btn  btn-primary"
+            onClick={handleLogout}
+          >
+            Logout
           </button>
         </form>
       </div>
